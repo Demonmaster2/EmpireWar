@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empire Wars - Jogo de Estratégia</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+        }
+        
+        header {
+            grid-column: 1 / 3;
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .resources {
+            display: flex;
+            margin-left: auto;
+        }
+        
+        .resource {
+            display: flex;
+            align-items: center;
+            margin-left: 20px;
+        }
+        
+        .resource-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+        
+        .sidebar {
+            background-color: #34495e;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .tab-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 5px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .tab-button:hover {
+            background-color: #1a252f;
+        }
+        
+        .building {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #2c3e50;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        
+        .building-info {
+            flex-grow: 1;
+        }
+        
+        .building-name {
+            font-weight: bold;
+        }
+        
+        .building-level {
+            font-size: 0.8em;
+            color: #bdc3c7;
+        }
+        
+        .building-button {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .building-button:disabled {
+            background-color: #7f8c8d;
+            cursor: not-allowed;
+        }
+        
+        .main-content {
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #ecf0f1;
+        }
+        
+        .map-container {
+            width: 100%;
+            height: 500px;
+            background-color: #bdc3c7;
+            position: relative;
+            margin-bottom: 20px;
+            border: 2px solid #2c3e50;
+        }
+        
+        .city {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+        }
+        
+        .city:hover {
+            transform: scale(1.1);
+        }
+        
+        .city-player {
+            background-color: #3498db;
+        }
+        
+        .city-neutral {
+            background-color: #f39c12;
+        }
+        
+        .city-enemy {
+            background-color: #e74c3c;
+        }
+        
+        .army {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #2c3e50;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        
+        .event-log {
+            height: 200px;
+            overflow-y: auto;
+            background-color: white;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            margin-bottom: 20px;
+        }
+        
+        .event {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .event.new {
+            background-color: #e8f4fc;
+        }
+        
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 300px;
+            border: 1px solid #bdc3c7;
+            background-color: white;
+        }
+        
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #bdc3c7;
+        }
+        
+        .chat-input input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+        }
+        
+        .chat-input button {
+            margin-left: 10px;
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .message {
+            margin-bottom: 10px;
+        }
+        
+        .message-sender {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            max-width: 500px;
+            width: 80%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .close-modal {
+            float: right;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        
+        .unit {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #2c3e50;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            color: white;
+        }
+        
+        .unit-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .unit-button:disabled {
+            background-color: #7f8c8d;
+            cursor: not-allowed;
+        }
+        
+        .diplomacy-option {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 5px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px;
+            background-color: #27ae60;
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">Empire Wars</div>
+            <div class="resources">
+                <div class="resource">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSJnb2xkIiBkPSJNNDY0IDI1NkEyMDggMjA4IDAgMSAxIDQ4IDI1NkEyMDggMjA4IDAgMSAxIDQ2NCAyNTZ6Ii8+PC9zdmc+" class="resource-icon" alt="Ouro">
+                    <span id="gold">1000</span>
+                </div>
+                <div class="resource">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSJicm93biIgZD0iTTQxNiAxMjhIMjU2VjMyYzAtMTcuNjctMTQuMzMtMzItMzItMzJoLTY0Yy0xNy42NyAwLTMyIDE0LjMzLTMyIDMydjk2SDMyYy0xNy42NyAwLTMyIDE0LjMzLTMyIDMydjMyYzAgMTcuNjcgMTQuMzMgMzIgMzIgMzJoMzguNjRjLTUuMDYgMTYuODItNy42NCAzNC42LTcuNjQgNTIuOCAwIDExMS4zIDk5LjYyIDE5OC4yIDIyNCAyMTUuN1Y0ODBoLTY0djY0aDI1NnYtNjRoLTY0di05Ni4zYzEyNC4zOC0xNy41IDIyNC0xMDQuNCAyMjQtMjE1LjcgMC0xOC4yLTIuNTgtMzUuOTgtNy42NC01Mi44SDQ4MGMxNy42NyAwIDMyLTE0LjMzIDMyLTMydi0zMmMwLTE3LjY3LTE0LjMzLTMyLTMyLTMyeiIvPjwvc3ZnPg==" class="resource-icon" alt="Madeira">
+                    <span id="wood">500</span>
+                </div>
+                <div class="resource">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSJncmF5IiBkPSJNNDgwIDEyOGMwLTcwLjY5LTU3LjMxLTEyOC0xMjgtMTI4aC0zMmMtNzAuNjkgMC0xMjggNTcuMzEtMTI4IDEyOHYzMmMwIDE3LjY3IDE0LjMzIDMyIDMyIDMyaDMyMGMxNy42NyAwIDMyLTE0LjMzIDMyLTMydi0zMnptLTMyMCAzMmMwLTM1LjM1IDI4LjY1LTY0IDY0LTY0aDMyYzM1LjM1IDAgNjQgMjguNjUgNjQgNjR2MzJIMTYwdi0zMnoiLz48L3N2Zz4=" class="resource-icon" alt="Ferro">
+                    <span id="iron">300</span>
+                </div>
+                <div class="resource">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZTY0YzRjIiBkPSJNNDY0IDI1NkEyMDggMjA4IDAgMSAxIDQ4IDI1NkEyMDggMjA4IDAgMSAxIDQ2NCAyNTZ6Ii8+PC9zdmc+" class="resource-icon" alt="Comida">
+                    <span id="food">800</span>
+                </div>
+            </div>
+        </header>
+        
+        <div class="sidebar">
+            <button class="tab-button active" onclick="openTab('buildings-tab')">Construções</button>
+            <button class="tab-button" onclick="openTab('military-tab')">Militar</button>
+            <button class="tab-button" onclick="openTab('diplomacy-tab')">Diplomacia</button>
+            <button class="tab-button" onclick="openTab('research-tab')">Pesquisa</button>
+            
+            <div id="buildings-tab" class="tab-content active">
+                <h3>Construções</h3>
+                <div id="buildings-list">
+                    <!-- Preenchido por JavaScript -->
+                </div>
+            </div>
+            
+            <div id="military-tab" class="tab-content">
+                <h3>Militar</h3>
+                <div id="units-list">
+                    <!-- Preenchido por JavaScript -->
+                </div>
+            </div>
+            
+            <div id="diplomacy-tab" class="tab-content">
+                <h3>Diplomacia</h3>
+                <button class="diplomacy-option" onclick="sendDiplomacy('alliance')">Propor Aliança</button>
+                <button class="diplomacy-option" onclick="sendDiplomacy('war')">Declarar Guerra</button>
+                <button class="diplomacy-option" onclick="sendDiplomacy('peace')">Propor Paz</button>
+                <button class="diplomacy-option" onclick="sendDiplomacy('trade')">Propor Comércio</button>
+            </div>
+            
+            <div id="research-tab" class="tab-content">
+                <h3>Pesquisa</h3>
+                <p>Tecnologias disponíveis em breve!</p>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="map-container" id="map">
+                <!-- Mapa será preenchido por JavaScript -->
+            </div>
+            
+            <h3>Eventos</h3>
+            <div class="event-log" id="event-log">
+                <!-- Eventos serão adicionados por JavaScript -->
+            </div>
+            
+            <h3>Chat Global</h3>
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Mensagens serão adicionadas por JavaScript -->
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chat-input" placeholder="Digite sua mensagem...">
+                    <button onclick="sendChatMessage()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Batalha -->
+    <div class="modal" id="battle-modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('battle-modal')">&times;</span>
+            <div class="modal-title" id="battle-title">Resultado da Batalha</div>
+            <div id="battle-content">
+                <!-- Conteúdo da batalha será preenchido por JavaScript -->
+            </div>
+            <button onclick="closeModal('battle-modal')">Fechar</button>
+        </div>
+    </div>
+    
+    <!-- Modal de Construção -->
+    <div class="modal" id="construction-modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('construction-modal')">&times;</span>
+            <div class="modal-title" id="construction-title">Construção em Progresso</div>
+            <div id="construction-content">
+                <!-- Conteúdo da construção será preenchido por JavaScript -->
+            </div>
+            <button onclick="closeModal('construction-modal')">Fechar</button>
+        </div>
+    </div>
+    
+    <!-- Modal de Recrutamento -->
+    <div class="modal" id="recruitment-modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('recruitment-modal')">&times;</span>
+            <div class="modal-title" id="recruitment-title">Recrutamento em Progresso</div>
+            <div id="recruitment-content">
+                <!-- Conteúdo do recrutamento será preenchido por JavaScript -->
+            </div>
+            <button onclick="closeModal('recruitment-modal')">Fechar</button>
+        </div>
+    </div>
+    
+    <!-- Notificação -->
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        // Estado do jogo
+        const gameState = {
+            resources: {
+                gold: 1000,
+                wood: 500,
+                iron: 300,
+                food: 800
+            },
+            buildings: {
+                barracks: { level: 1, maxLevel: 10 },
+                farm: { level: 1, maxLevel: 10 },
+                mine: { level: 1, maxLevel: 10 },
+                lumberMill: { level: 1, maxLevel: 10 },
+                wall: { level: 1, maxLevel: 10 },
+                academy: { level: 0, maxLevel: 5 }
+            },
+            units: {
+                soldier: { count: 0, training: 0 },
+                archer: { count: 0, training: 0 },
+                cavalry: { count: 0, training: 0 }
+            },
+            constructionQueue: [],
+            recruitmentQueue: [],
+            events: [],
+            chatMessages: [],
+            cities: [
+                { id: 1, name: "Capital", x: 50, y: 50, owner: "player", level: 1, population: 1000, defense: 100 },
+                { id: 2, name: "Vila do Norte", x: 20, y: 80, owner: "neutral", level: 1, population: 500, defense: 50 },
+                { id: 3, name: "Cidade do Leste", x: 80, y: 20, owner: "neutral", level: 1, population: 500, defense: 50 },
+                { id: 4, name: "Porto do Sul", x: 50, y: 90, owner: "neutral", level: 1, population: 500, defense: 50 },
+                { id: 5, name: "Fortaleza Oeste", x: 10, y: 50, owner: "neutral", level: 1, population: 500, defense: 50 },
+                { id: 6, name: "Império Vermelho", x: 90, y: 90, owner: "enemy1", level: 2, population: 1500, defense: 200 },
+                { id: 7, name: "Reino Azul", x: 90, y: 10, owner: "enemy2", level: 2, population: 1500, defense: 200 },
+                { id: 8, name: "Clã Verde", x: 10, y: 10, owner: "enemy3", level: 2, population: 1500, defense: 200 }
+            ],
+            armies: [
+                { id: 1, owner: "player", x: 50, y: 50, soldiers: 0, archers: 0, cavalry: 0, targetX: null, targetY: null, moving: false },
+                { id: 2, owner: "enemy1", x: 90, y: 90, soldiers: 10, archers: 5, cavalry: 2, targetX: null, targetY: null, moving: false },
+                { id: 3, owner: "enemy2", x: 90, y: 10, soldiers: 10, archers: 5, cavalry: 2, targetX: null, targetY: null, moving: false },
+                { id: 4, owner: "enemy3", x: 10, y: 10, soldiers: 10, archers: 5, cavalry: 2, targetX: null, targetY: null, moving: false }
+            ],
+            diplomacy: {
+                enemy1: "war",
+                enemy2: "war",
+                enemy3: "war"
+            },
+            lastUpdate: Date.now()
+        };
+
+        // Custos e configurações
+        const buildingCosts = {
+            barracks: { gold: 200, wood: 100, iron: 50, food: 0, time: 30 },
+            farm: { gold: 150, wood: 50, iron: 20, food: 0, time: 20 },
+            mine: { gold: 250, wood: 80, iron: 30, food: 0, time: 40 },
+            lumberMill: { gold: 180, wood: 40, iron: 20, food: 0, time: 25 },
+            wall: { gold: 300, wood: 150, iron: 100, food: 0, time: 45 },
+            academy: { gold: 500, wood: 200, iron: 150, food: 0, time: 60 }
+        };
+
+        const unitCosts = {
+            soldier: { gold: 50, wood: 20, iron: 30, food: 1, time: 10 },
+            archer: { gold: 70, wood: 40, iron: 20, food: 1, time: 15 },
+            cavalry: { gold: 100, wood: 30, iron: 60, food: 2, time: 20 }
+        };
+
+        const buildingProduction = {
+            barracks: { gold: 0, wood: 0, iron: 0, food: 0 },
+            farm: { gold: 0, wood: 0, iron: 0, food: 50 },
+            mine: { gold: 30, wood: 0, iron: 20, food: 0 },
+            lumberMill: { gold: 0, wood: 40, iron: 0, food: 0 },
+            wall: { gold: 0, wood: 0, iron: 0, food: 0 },
+            academy: { gold: 0, wood: 0, iron: 0, food: 0 }
+        };
+
+        // Nomes dos prédios para exibição
+        const buildingNames = {
+            barracks: "Quartel",
+            farm: "Fazenda",
+            mine: "Mina",
+            lumberMill: "Serraria",
+            wall: "Muralha",
+            academy: "Academia"
+        };
+
+        // Nomes das unidades para exibição
+        const unitNames = {
+            soldier: "Soldado",
+            archer: "Arqueiro",
+            cavalry: "Cavaleiro"
+        };
+
+        // Nomes dos inimigos para exibição
+        const enemyNames = {
+            enemy1: "Império Vermelho",
+            enemy2: "Reino Azul",
+            enemy3: "Clã Verde"
+        };
+
+        // Inicialização do jogo
+        function initGame() {
+            loadGame();
+            renderResources();
+            renderBuildings();
+            renderUnits();
+            renderMap();
+            renderEventLog();
+            renderChat();
+            
+            // Configurar atualização periódica
+            setInterval(updateGame, 1000);
+            
+            // Configurar atalhos de teclado
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    saveGame();
+                    showNotification("Jogo salvo com sucesso!");
+                }
+            });
+            
+            // Adicionar evento de duplo clique no mapa para mover exército
+            document.getElementById('map').addEventListener('dblclick', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                
+                moveArmy(x, y);
+            });
+            
+            // Adicionar mensagem inicial
+            addEvent("Bem-vindo ao Empire Wars! Construa seu império e domine o mundo!");
+            addChatMessage("Sistema", "Bem-vindo ao chat global. Converse com outros jogadores!");
+            
+            // NPCs enviam mensagens periódicas
+            setInterval(function() {
+                const randomMessages = [
+                    "Alguém quer formar uma aliança?",
+                    "Estou atacando o jogador vermelho, alguém se junta?",
+                    "Preciso de madeira, alguém para negociar?",
+                    "Novas tropas recrutadas!",
+                    "Minha cidade está prosperando!"
+                ];
+                
+                const randomEnemy = ["enemy1", "enemy2", "enemy3"][Math.floor(Math.random() * 3)];
+                const randomMessage = randomMessages[Math.floor(Math.random() * randomMessages.length)];
+                
+                addChatMessage(enemyNames[randomEnemy], randomMessage);
+            }, 30000);
+        }
+
+        // Atualização do jogo
+        function updateGame() {
+            const now = Date.now();
+            const deltaTime = (now - gameState.lastUpdate) / 1000; // em segundos
+            gameState.lastUpdate = now;
+            
+            // Produção de recursos
+            for (const building in gameState.buildings) {
+                const level = gameState.buildings[building].level;
+                
+                gameState.resources.gold += buildingProduction[building].gold * level * deltaTime / 60;
+                gameState.resources.wood += buildingProduction[building].wood * level * deltaTime / 60;
+                gameState.resources.iron += buildingProduction[building].iron * level * deltaTime / 60;
+                gameState.resources.food += buildingProduction[building].food * level * deltaTime / 60;
+            }
+            
+            // Consumo de comida pelas unidades
+            const totalUnits = gameState.units.soldier.count + gameState.units.archer.count + gameState.units.cavalry.count;
+            gameState.resources.food -= totalUnits * 0.1 * deltaTime / 60;
+            
+            // Atualizar construções em progresso
+            updateConstructionQueue(deltaTime);
+            
+            // Atualizar recrutamentos em progresso
+            updateRecruitmentQueue(deltaTime);
+            
+            // Atualizar movimentação de exércitos
+            updateArmyMovement(deltaTime);
+            
+            // Eventos aleatórios
+            if (Math.random() < 0.01 * deltaTime) {
+                triggerRandomEvent();
+            }
+            
+            // Atualizar exibição
+            renderResources();
+            
+            // Verificar se a comida acabou
+            if (gameState.resources.food < 0) {
+                gameState.resources.food = 0;
+                const starvation = Math.floor(totalUnits * 0.1 * deltaTime / 60);
+                
+                if (starvation > 0) {
+                    // Unidades morrem de fome
+                    gameState.units.soldier.count = Math.max(0, gameState.units.soldier.count - Math.floor(starvation * 0.5));
+                    gameState.units.archer.count = Math.max(0, gameState.units.archer.count - Math.floor(starvation * 0.3));
+                    gameState.units.cavalry.count = Math.max(0, gameState.units.cavalry.count - Math.floor(starvation * 0.2));
+                    
+                    addEvent(`Fome! Você perdeu ${starvation} unidades devido à falta de comida!`);
+                    renderUnits();
+                }
+            }
+            
+            // Salvar o jogo periodicamente
+            if (now % 30000 < 1000) { // A cada ~30 segundos
+                saveGame();
+            }
+        }
+
+        // Atualizar fila de construção
+        function updateConstructionQueue(deltaTime) {
+            if (gameState.constructionQueue.length > 0) {
+                const currentConstruction = gameState.constructionQueue[0];
+                currentConstruction.timeLeft -= deltaTime;
+                
+                if (currentConstruction.timeLeft <= 0) {
+                    // Construção concluída
+                    gameState.buildings[currentConstruction.building].level++;
+                    gameState.constructionQueue.shift();
+                    
+                    addEvent(`${buildingNames[currentConstruction.building]} concluído! Novo nível: ${gameState.buildings[currentConstruction.building].level}`);
+                    
+                    // Atualizar exibição
+                    renderBuildings();
+                    
+                    // Mostrar modal de conclusão
+                    document.getElementById('construction-title').textContent = `${buildingNames[currentConstruction.building]} Concluído`;
+                    document.getElementById('construction-content').innerHTML = `
+                        <p>Seu ${buildingNames[currentConstruction.building]} foi atualizado para o nível ${gameState.buildings[currentConstruction.building].level}!</p>
+                    `;
+                    openModal('construction-modal');
+                    
+                    // Verificar se há mais construções na fila
+                    if (gameState.constructionQueue.length > 0) {
+                        document.getElementById('construction-title').textContent = "Construção em Progresso";
+                        document.getElementById('construction-content').innerHTML = `
+                            <p>Construindo ${buildingNames[gameState.constructionQueue[0].building]} (Nível ${gameState.buildings[gameState.constructionQueue[0].building].level + 1})</p>
+                            <p>Tempo restante: ${Math.ceil(gameState.constructionQueue[0].timeLeft)} segundos</p>
+                        `;
+                    }
+                } else {
+                    // Atualizar modal de construção em progresso
+                    if (document.getElementById('construction-modal').style.display === 'flex') {
+                        document.getElementById('construction-content').innerHTML = `
+                            <p>Construindo ${buildingNames[currentConstruction.building]} (Nível ${gameState.buildings[currentConstruction.building].level + 1})</p>
+                            <p>Tempo restante: ${Math.ceil(currentConstruction.timeLeft)} segundos</p>
+                        `;
+                    }
+                }
+            }
+        }
+
+        // Atualizar fila de recrutamento
+        function updateRecruitmentQueue(deltaTime) {
+            if (gameState.recruitmentQueue.length > 0) {
+                const currentRecruitment = gameState.recruitmentQueue[0];
+                currentRecruitment.timeLeft -= deltaTime;
+                
+                if (currentRecruitment.timeLeft <= 0) {
+                    // Recrutamento concluído
+                    gameState.units[currentRecruitment.unit].count += currentRecruitment.quantity;
+                    gameState.units[currentRecruitment.unit].training -= currentRecruitment.quantity;
+                    gameState.recruitmentQueue.shift();
+                    
+                    addEvent(`${currentRecruitment.quantity} ${unitNames[currentRecruitment.unit]}${currentRecruitment.quantity > 1 ? 's' : ''} recrutado${currentRecruitment.quantity > 1 ? 's' : ''}!`);
+                    
+                    // Atualizar exibição
+                    renderUnits();
+                    
+                    // Mostrar modal de conclusão
+                    document.getElementById('recruitment-title').textContent = "Recrutamento Concluído";
+                    document.getElementById('recruitment-content').innerHTML = `
+                        <p>${currentRecruitment.quantity} ${unitNames[currentRecruitment.unit]}${currentRecruitment.quantity > 1 ? 's' : ''} foram recrutado${currentRecruitment.quantity > 1 ? 's' : ''} com sucesso!</p>
+                    `;
+                    openModal('recruitment-modal');
+                    
+                    // Verificar se há mais recrutamentos na fila
+                    if (gameState.recruitmentQueue.length > 0) {
+                        document.getElementById('recruitment-title').textContent = "Recrutamento em Progresso";
+                        document.getElementById('recruitment-content').innerHTML = `
+                            <p>Recrutando ${gameState.recruitmentQueue[0].quantity} ${unitNames[gameState.recruitmentQueue[0].unit]}${gameState.recruitmentQueue[0].quantity > 1 ? 's' : ''}</p>
+                            <p>Tempo restante: ${Math.ceil(gameState.recruitmentQueue[0].timeLeft)} segundos</p>
+                        `;
+                    }
+                } else {
+                    // Atualizar modal de recrutamento em progresso
+                    if (document.getElementById('recruitment-modal').style.display === 'flex') {
+                        document.getElementById('recruitment-content').innerHTML = `
+                            <p>Recrutando ${currentRecruitment.quantity} ${unitNames[currentRecruitment.unit]}${currentRecruitment.quantity > 1 ? 's' : ''}</p>
+                            <p>Tempo restante: ${Math.ceil(currentRecruitment.timeLeft)} segundos</p>
+                        `;
+                    }
+                }
+            }
+        }
+
+        // Atualizar movimentação de exércitos
+        function updateArmyMovement(deltaTime) {
+            const speed = 10; // unidades por segundo
+            
+            for (const army of gameState.armies) {
+                if (army.moving && army.targetX !== null && army.targetY !== null) {
+                    const dx = army.targetX - army.x;
+                    const dy = army.targetY - army.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 1) {
+                        // Chegou ao destino
+                        army.x = army.targetX;
+                        army.y = army.targetY;
+                        army.moving = false;
+                        army.targetX = null;
+                        army.targetY = null;
+                        
+                        // Verificar se chegou em uma cidade
+                        const targetCity = findCityAtPosition(army.x, army.y);
+                        
+                        if (targetCity && targetCity.owner !== army.owner) {
+                            // Batalha!
+                            resolveBattle(army, targetCity);
+                        }
+                    } else {
+                        // Mover em direção ao alvo
+                        const moveDistance = speed * deltaTime;
+                        const ratio = moveDistance / distance;
+                        
+                        army.x += dx * ratio;
+                        army.y += dy * ratio;
+                    }
+                }
+            }
+            
+            // Renderizar o mapa para atualizar as posições
+            renderMap();
+        }
+
+        // Encontrar cidade em uma posição
+        function findCityAtPosition(x, y) {
+            for (const city of gameState.cities) {
+                const distance = Math.sqrt(Math.pow(city.x - x, 2) + Math.pow(city.y - y, 2));
+                if (distance < 3) { // Raio de proximidade
+                    return city;
+                }
+            }
+            return null;
+        }
+
+        // Resolver batalha
+        function resolveBattle(attackingArmy, defendingCity) {
+            // Encontrar exército defensor
+            let defendingArmy = null;
+            for (const army of gameState.armies) {
+                if (army.owner === defendingCity.owner && Math.abs(army.x - defendingCity.x) < 3 && Math.abs(army.y - defendingCity.y) < 3) {
+                    defendingArmy = army;
+                    break;
+                }
+            }
+            
+            // Calcular poder de ataque e defesa
+            const attackPower = attackingArmy.soldiers * 5 + attackingArmy.archers * 7 + attackingArmy.cavalry * 10;
+            let defensePower = defendingCity.defense;
+            
+            if (defendingArmy) {
+                defensePower += defendingArmy.soldiers * 6 + defendingArmy.archers * 4 + defendingArmy.cavalry * 8;
+            }
+            
+            // Fator aleatório (0.8 a 1.2)
+            const randomFactor = 0.8 + Math.random() * 0.4;
+            const totalAttack = attackPower * randomFactor;
+            const totalDefense = defensePower * (0.9 + Math.random() * 0.2); // Defesa tem um pequeno bônus
+            
+            // Determinar vencedor
+            const attackerWins = totalAttack > totalDefense;
+            
+            // Calcular perdas
+            const attackerLossRatio = Math.min(1, totalDefense / (totalAttack * 2));
+            const defenderLossRatio = Math.min(1, totalAttack / (totalDefense * 2));
+            
+            // Aplicar perdas
+            if (attackingArmy) {
+                attackingArmy.soldiers = Math.floor(attackingArmy.soldiers * (1 - attackerLossRatio * 0.5));
+                attackingArmy.archers = Math.floor(attackingArmy.archers * (1 - attackerLossRatio * 0.4));
+                attackingArmy.cavalry = Math.floor(attackingArmy.cavalry * (1 - attackerLossRatio * 0.3));
+            }
+            
+            if (defendingArmy) {
+                defendingArmy.soldiers = Math.floor(defendingArmy.soldiers * (1 - defenderLossRatio * 0.5));
+                defendingArmy.archers = Math.floor(defendingArmy.archers * (1 - defenderLossRatio * 0.4));
+                defendingArmy.cavalry = Math.floor(defendingArmy.cavalry * (1 - defenderLossRatio * 0.3));
+            } else {
+                defendingCity.defense = Math.floor(defendingCity.defense * (1 - defenderLossRatio));
+            }
+            
+            // Resultado da batalha
+            let battleResult = "";
+            
+            if (attackerWins) {
+                // Conquistar a cidade
+                const oldOwner = defendingCity.owner;
+                defendingCity.owner = attackingArmy.owner;
+                defendingCity.defense = Math.floor(defendingCity.defense * 0.7); // Defesa reduzida após conquista
+                
+                battleResult = `Você conquistou ${defendingCity.name}!`;
+                
+                // Atualizar diplomacia
+                if (oldOwner !== "neutral" && oldOwner !== "player") {
+                    gameState.diplomacy[oldOwner] = "war";
+                }
+                
+                // Mover exército para a cidade
+                attackingArmy.x = defendingCity.x;
+                attackingArmy.y = defendingCity.y;
+                attackingArmy.moving = false;
+                attackingArmy.targetX = null;
+                attackingArmy.targetY = null;
+            } else {
+                battleResult = `Você falhou em conquistar ${defendingCity.name}.`;
+                
+                // Recuar exército
+                attackingArmy.x = gameState.cities.find(c => c.owner === "player").x;
+                attackingArmy.y = gameState.cities.find(c => c.owner === "player").y;
+                attackingArmy.moving = false;
+                attackingArmy.targetX = null;
+                attackingArmy.targetY = null;
+            }
+            
+            // Adicionar evento
+            addEvent(`Batalha em ${defendingCity.name}: ${battleResult}`);
+            
+            // Mostrar modal de resultado da batalha
+            document.getElementById('battle-title').textContent = `Batalha em ${defendingCity.name}`;
+            document.getElementById('battle-content').innerHTML = `
+                <p><strong>Resultado:</strong> ${battleResult}</p>
+                <p><strong>Seu poder de ataque:</strong> ${Math.round(totalAttack)}</p>
+                <p><strong>Poder de defesa inimigo:</strong> ${Math.round(totalDefense)}</p>
+                <p><strong>Suas perdas:</strong> ${Math.round(attackerLossRatio * 100)}% de suas tropas</p>
+                <p><strong>Perdas inimigas:</strong> ${Math.round(defenderLossRatio * 100)}% de suas tropas</p>
+            `;
+            openModal('battle-modal');
+            
+            // Atualizar exibição
+            renderMap();
+            renderUnits();
+        }
+
+        // Mover exército
+        function moveArmy(x, y) {
+            const playerArmy = gameState.armies.find(a => a.owner === "player");
+            
+            if (playerArmy) {
+                playerArmy.targetX = x;
+                playerArmy.targetY = y;
+                playerArmy.moving = true;
+                
+                // Verificar se está atacando uma cidade
+                const targetCity = findCityAtPosition(x, y);
+                
+                if (targetCity && targetCity.owner !== "player") {
+                    const relation = targetCity.owner === "neutral" ? "neutra" : gameState.diplomacy[targetCity.owner] === "war" ? "inimiga" : "aliada";
+                    addEvent(`Seu exército está se movendo para atacar a cidade ${relation} ${targetCity.name}!`);
+                } else {
+                    addEvent(`Seu exército está se movendo para (${Math.round(x)}, ${Math.round(y)})`);
+                }
+                
+                renderMap();
+            }
+        }
+
+        // Disparar evento aleatório
+        function triggerRandomEvent() {
+            const events = [
+                {
+                    title: "Descoberta de Ouro!",
+                    message: "Seus mineradores encontraram uma veia de ouro! +200 ouro.",
+                    effect: () => { gameState.resources.gold += 200; renderResources(); }
+                },
+                {
+                    title: "Incêndio na Serraria!",
+                    message: "Um incêndio destruiu parte de sua serraria. -100 madeira.",
+                    effect: () => { gameState.resources.wood = Math.max(0, gameState.resources.wood - 100); renderResources(); }
+                },
+                {
+                    title: "Festa na Cidade!",
+                    message: "Seus cidadãos estão felizes e trabalham com mais eficiência. +10% de produção por 1 minuto.",
+                    effect: () => {
+                        // Aumentar produção temporariamente
+                        const originalProduction = JSON.parse(JSON.stringify(buildingProduction));
+                        
+                        for (const building in buildingProduction) {
+                            for (const resource in buildingProduction[building]) {
+                                buildingProduction[building][resource] *= 1.1;
+                            }
+                        }
+                        
+                        setTimeout(() => {
+                            for (const building in buildingProduction) {
+                                for (const resource in buildingProduction[building]) {
+                                    buildingProduction[building][resource] = originalProduction[building][resource];
+                                }
+                            }
+                        }, 60000);
+                    }
+                },
+                {
+                    title: "Ataque de Bandidos!",
+                    message: "Bandidos atacaram suas tropas! Você perdeu alguns soldados.",
+                    effect: () => {
+                        if (gameState.units.soldier.count > 0) {
+                            const lost = Math.max(1, Math.floor(gameState.units.soldier.count * 0.1));
+                            gameState.units.soldier.count -= lost;
+                            renderUnits();
+                        }
+                    }
+                },
+                {
+                    title: "Colheita Abundante!",
+                    message: "Suas fazendas produziram mais comida do que o esperado. +150 comida.",
+                    effect: () => { gameState.resources.food += 150; renderResources(); }
+                }
+            ];
+            
+            const randomEvent = events[Math.floor(Math.random() * events.length)];
+            addEvent(randomEvent.message);
+            randomEvent.effect();
+        }
+
+        // Adicionar evento ao log
+        function addEvent(message) {
+            gameState.events.unshift({
+                message: message,
+                time: new Date().toLocaleTimeString(),
+                isNew: true
+            });
+            
+            // Limitar a 50 eventos
+            if (gameState.events.length > 50) {
+                gameState.events.pop();
+            }
+            
+            renderEventLog();
+        }
+
+        // Adicionar mensagem de chat
+        function addChatMessage(sender, message) {
+            gameState.chatMessages.push({
+                sender: sender,
+                message: message,
+                time: new Date().toLocaleTimeString()
+            });
+            
+            // Limitar a 100 mensagens
+            if (gameState.chatMessages.length > 100) {
+                gameState.chatMessages.shift();
+            }
+            
+            renderChat();
+        }
+
+        // Enviar mensagem de chat
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                addChatMessage("Você", message);
+                input.value = "";
+                
+                // Resposta automática dos NPCs
+                if (Math.random() < 0.5) {
+                    setTimeout(() => {
+                        const randomResponses = [
+                            "Interessante...",
+                            "Você está certo!",
+                            "Não concordo.",
+                            "Vamos negociar?",
+                            "Preciso pensar sobre isso."
+                        ];
+                        
+                        const randomEnemy = ["enemy1", "enemy2", "enemy3"][Math.floor(Math.random() * 3)];
+                        const randomResponse = randomResponses[Math.floor(Math.random() * randomResponses.length)];
+                        
+                        addChatMessage(enemyNames[randomEnemy], randomResponse);
+                    }, 2000);
+                }
+            }
+        }
+
+        // Enviar proposta diplomática
+        function sendDiplomacy(type) {
+            const enemyOptions = Object.keys(gameState.diplomacy).filter(e => e !== "player");
+            const randomEnemy = enemyOptions[Math.floor(Math.random() * enemyOptions.length)];
+            
+            let message = "";
+            
+            switch (type) {
+                case "alliance":
+                    if (gameState.diplomacy[randomEnemy] === "war") {
+                        gameState.diplomacy[randomEnemy] = "peace";
+                        message = `Você propôs paz ao ${enemyNames[randomEnemy]}. Eles aceitaram temporariamente.`;
+                    } else {
+                        message = `Você propôs uma aliança ao ${enemyNames[randomEnemy]}. Eles estão considerando.`;
+                    }
+                    break;
+                case "war":
+                    gameState.diplomacy[randomEnemy] = "war";
+                    message = `Você declarou guerra ao ${enemyNames[randomEnemy]}!`;
+                    break;
+                case "peace":
+                    gameState.diplomacy[randomEnemy] = "peace";
+                    message = `Você propôs paz ao ${enemyNames[randomEnemy]}. Eles aceitaram.`;
+                    break;
+                case "trade":
+                    message = `Você propôs um acordo comercial com ${enemyNames[randomEnemy]}. Eles enviaram 100 de ouro como gesto de boa vontade.`;
+                    gameState.resources.gold += 100;
+                    renderResources();
+                    break;
+            }
+            
+            addEvent(message);
+            showNotification(message);
+        }
+
+        // Mostrar notificação
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Abrir modal
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        // Fechar modal
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // Abrir aba
+        function openTab(tabId) {
+            // Esconder todas as abas
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            // Desativar todos os botões
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+            
+            // Ativar a aba selecionada
+            document.getElementById(tabId).classList.add('active');
+            
+            // Ativar o botão correspondente
+            event.currentTarget.classList.add('active');
+        }
+
+        // Construir/upgrade prédio
+        function build(building) {
+            const currentLevel = gameState.buildings[building].level;
+            const maxLevel = gameState.buildings[building].maxLevel;
+            
+            if (currentLevel >= maxLevel) {
+                showNotification(`Nível máximo (${maxLevel}) já alcançado para ${buildingNames[building]}`);
+                return;
+            }
+            
+            const costs = buildingCosts[building];
+            let canAfford = true;
+            
+            // Verificar recursos
+            for (const resource in costs) {
+                if (resource !== 'time' && gameState.resources[resource] < costs[resource] * (currentLevel + 1)) {
+                    canAfford = false;
+                    showNotification(`Recursos insuficientes para construir ${buildingNames[building]}! Falta ${costs[resource] * (currentLevel + 1) - gameState.resources[resource]} ${resource}`);
+                    break;
+                }
+            }
+            
+            if (canAfford) {
+                // Deduzir recursos
+                for (const resource in costs) {
+                    if (resource !== 'time') {
+                        gameState.resources[resource] -= costs[resource] * (currentLevel + 1);
+                    }
+                }
+                
+                // Adicionar à fila de construção
+                gameState.constructionQueue.push({
+                    building: building,
+                    timeLeft: costs.time * (currentLevel + 1),
+                    level: currentLevel + 1
+                });
+                
+                // Mostrar modal de construção em progresso
+                document.getElementById('construction-title').textContent = "Construção em Progresso";
+                document.getElementById('construction-content').innerHTML = `
+                    <p>Construindo ${buildingNames[building]} (Nível ${currentLevel + 1})</p>
+                    <p>Tempo restante: ${costs.time * (currentLevel + 1)} segundos</p>
+                `;
+                openModal('construction-modal');
+                
+                // Atualizar exibição
+                renderResources();
+                renderBuildings();
+                
+                addEvent(`Iniciada construção de ${buildingNames[building]} (Nível ${currentLevel + 1})`);
+            }
+        }
+
+        // Recrutar unidades
+        function recruit(unit, quantity = 1) {
+            const costs = unitCosts[unit];
+            let canAfford = true;
+            
+            // Verificar recursos
+            for (const resource in costs) {
+                if (resource !== 'time' && gameState.resources[resource] < costs[resource] * quantity) {
+                    canAfford = false;
+                    showNotification(`Recursos insuficientes para recrutar ${quantity} ${unitNames[unit]}${quantity > 1 ? 's' : ''}! Falta ${costs[resource] * quantity - gameState.resources[resource]} ${resource}`);
+                    break;
+                }
+            }
+            
+            // Verificar espaço no quartel
+            const barrackLevel = gameState.buildings.barracks.level;
+            const maxUnits = barrackLevel * 10;
+            const currentUnits = gameState.units.soldier.count + gameState.units.archer.count + gameState.units.cavalry.count;
+            const trainingUnits = gameState.units.soldier.training + gameState.units.archer.training + gameState.units.cavalry.training;
+            
+            if (currentUnits + trainingUnits + quantity > maxUnits) {
+                canAfford = false;
+                showNotification(`Capacidade do quartel excedida! Atualize seu quartel para recrutar mais unidades.`);
+            }
+            
+            if (canAfford) {
+                // Deduzir recursos
+                for (const resource in costs) {
+                    if (resource !== 'time') {
+                        gameState.resources[resource] -= costs[resource] * quantity;
+                    }
+                }
+                
+                // Adicionar à fila de recrutamento
+                gameState.recruitmentQueue.push({
+                    unit: unit,
+                    quantity: quantity,
+                    timeLeft: costs.time * quantity
+                });
+                
+                // Marcar como em treinamento
+                gameState.units[unit].training += quantity;
+                
+                // Mostrar modal de recrutamento em progresso
+                document.getElementById('recruitment-title').textContent = "Recrutamento em Progresso";
+                document.getElementById('recruitment-content').innerHTML = `
+                    <p>Recrutando ${quantity} ${unitNames[unit]}${quantity > 1 ? 's' : ''}</p>
+                    <p>Tempo restante: ${costs.time * quantity} segundos</p>
+                `;
+                openModal('recruitment-modal');
+                
+                // Atualizar exibição
+                renderResources();
+                renderUnits();
+                
+                addEvent(`Iniciado recrutamento de ${quantity} ${unitNames[unit]}${quantity > 1 ? 's' : ''}`);
+            }
+        }
+
+        // Renderizar recursos
+        function renderResources() {
+            document.getElementById('gold').textContent = Math.floor(gameState.resources.gold);
+            document.getElementById('wood').textContent = Math.floor(gameState.resources.wood);
+            document.getElementById('iron').textContent = Math.floor(gameState.resources.iron);
+            document.getElementById('food').textContent = Math.floor(gameState.resources.food);
+        }
+
+        // Renderizar prédios
+        function renderBuildings() {
+            const buildingsList = document.getElementById('buildings-list');
+            buildingsList.innerHTML = '';
+            
+            for (const building in gameState.buildings) {
+                const currentLevel = gameState.buildings[building].level;
+                const maxLevel = gameState.buildings[building].maxLevel;
+                
+                const buildingElement = document.createElement('div');
+                buildingElement.className = 'building';
+                
+                const buildingInfo = document.createElement('div');
+                buildingInfo.className = 'building-info';
+                
+                const buildingName = document.createElement('div');
+                buildingName.className = 'building-name';
+                buildingName.textContent = buildingNames[building];
+                
+                const buildingLevel = document.createElement('div');
+                buildingLevel.className = 'building-level';
+                buildingLevel.textContent = `Nível ${currentLevel}/${maxLevel}`;
+                
+                buildingInfo.appendChild(buildingName);
+                buildingInfo.appendChild(buildingLevel);
+                
+                const buildingButton = document.createElement('button');
+                buildingButton.className = 'building-button';
+                buildingButton.textContent = 'Upgrade';
+                buildingButton.onclick = () => build(building);
+                
+                // Desabilitar botão se já estiver no nível máximo
+                if (currentLevel >= maxLevel) {
+                    buildingButton.disabled = true;
+                    buildingButton.textContent = 'Máx.';
+                }
+                
+                // Desabilitar botão se já estiver em construção
+                const isInQueue = gameState.constructionQueue.some(item => item.building === building);
+                if (isInQueue) {
+                    buildingButton.disabled = true;
+                    buildingButton.textContent = 'Em construção';
+                }
+                
+                buildingElement.appendChild(buildingInfo);
+                buildingElement.appendChild(buildingButton);
+                
+                buildingsList.appendChild(buildingElement);
+            }
+        }
+
+        // Renderizar unidades
+        function renderUnits() {
+            const unitsList = document.getElementById('units-list');
+            unitsList.innerHTML = '';
+            
+            for (const unit in gameState.units) {
+                const unitElement = document.createElement('div');
+                unitElement.className = 'unit';
+                
+                const unitInfo = document.createElement('div');
+                unitInfo.className = 'unit-info';
+                
+                const unitName = document.createElement('div');
+                unitName.className = 'unit-name';
+                unitName.textContent = `${unitNames[unit]}: ${gameState.units[unit].count}`;
+                
+                if (gameState.units[unit].training > 0) {
+                    const trainingText = document.createElement('span');
+                    trainingText.textContent = ` (+${gameState.units[unit].training} em treinamento)`;
+                    trainingText.style.color = '#bdc3c7';
+                    unitName.appendChild(trainingText);
+                }
+                
+                unitInfo.appendChild(unitName);
+                
+                const recruitButtons = document.createElement('div');
+                
+                // Botão para recrutar 1 unidade
+                const recruit1Button = document.createElement('button');
+                recruit1Button.className = 'unit-button';
+                recruit1Button.textContent = '+1';
+                recruit1Button.onclick = () => recruit(unit, 1);
+                
+                // Botão para recrutar 5 unidades
+                const recruit5Button = document.createElement('button');
+                recruit5Button.className = 'unit-button';
+                recruit5Button.textContent = '+5';
+                recruit5Button.onclick = () => recruit(unit, 5);
+                
+                // Botão para recrutar 10 unidades
+                const recruit10Button = document.createElement('button');
+                recruit10Button.className = 'unit-button';
+                recruit10Button.textContent = '+10';
+                recruit10Button.onclick = () => recruit(unit, 10);
+                
+                // Verificar se há recursos para recrutar pelo menos 1 unidade
+                const costs = unitCosts[unit];
+                let canAfford1 = true;
+                
+                for (const resource in costs) {
+                    if (resource !== 'time' && gameState.resources[resource] < costs[resource]) {
+                        canAfford1 = false;
+                        break;
+                    }
+                }
+                
+                // Verificar espaço no quartel
+                const barrackLevel = gameState.buildings.barracks.level;
+                const maxUnits = barrackLevel * 10;
+                const currentUnits = gameState.units.soldier.count + gameState.units.archer.count + gameState.units.cavalry.count;
+                const trainingUnits = gameState.units.soldier.training + gameState.units.archer.training + gameState.units.cavalry.training;
+                
+                if (!canAfford1 || currentUnits + trainingUnits >= maxUnits) {
+                    recruit1Button.disabled = true;
+                    recruit5Button.disabled = true;
+                    recruit10Button.disabled = true;
+                } else {
+                    // Verificar se pode recrutar 5
+                    let canAfford5 = true;
+                    for (const resource in costs) {
+                        if (resource !== 'time' && gameState.resources[resource] < costs[resource] * 5) {
+                            canAfford5 = false;
+                            break;
+                        }
+                    }
+                    
+                    if (!canAfford5 || currentUnits + trainingUnits + 5 > maxUnits) {
+                        recruit5Button.disabled = true;
+                        recruit10Button.disabled = true;
+                    } else {
+                        // Verificar se pode recrutar 10
+                        let canAfford10 = true;
+                        for (const resource in costs) {
+                            if (resource !== 'time' && gameState.resources[resource] < costs[resource] * 10) {
+                                canAfford10 = false;
+                                break;
+                            }
+                        }
+                        
+                        if (!canAfford10 || currentUnits + trainingUnits + 10 > maxUnits) {
+                            recruit10Button.disabled = true;
+                        }
+                    }
+                }
+                
+                recruitButtons.appendChild(recruit1Button);
+                recruitButtons.appendChild(recruit5Button);
+                recruitButtons.appendChild(recruit10Button);
+                
+                unitElement.appendChild(unitInfo);
+                unitElement.appendChild(recruitButtons);
+                
+                unitsList.appendChild(unitElement);
+            }
+        }
+
+        // Renderizar mapa
+        function renderMap() {
+            const map = document.getElementById('map');
+            map.innerHTML = '';
+            
+            // Adicionar cidades
+            for (const city of gameState.cities) {
+                const cityElement = document.createElement('div');
+                cityElement.className = `city city-${city.owner === 'player' ? 'player' : city.owner.startsWith('enemy') ? 'enemy' : 'neutral'}`;
+                cityElement.style.left = `${city.x}%`;
+                cityElement.style.top = `${city.y}%`;
+                cityElement.title = `${city.name} (Nível ${city.level})`;
+                
+                // Adicionar nome da cidade como texto
+                const cityText = document.createElement('span');
+                cityText.textContent = city.name[0]; // Mostrar apenas a primeira letra
+                cityElement.appendChild(cityText);
+                
+                map.appendChild(cityElement);
+            }
+            
+            // Adicionar exércitos
+            for (const army of gameState.armies) {
+                if (army.soldiers > 0 || army.archers > 0 || army.cavalry > 0) {
+                    const armyElement = document.createElement('div');
+                    armyElement.className = 'army';
+                    armyElement.style.left = `${army.x}%`;
+                    armyElement.style.top = `${army.y}%`;
+                    
+                    // Tamanho baseado no número de tropas
+                    const totalUnits = army.soldiers + army.archers + army.cavalry;
+                    const size = 15 + Math.min(15, Math.floor(totalUnits / 5));
+                    armyElement.style.width = `${size}px`;
+                    armyElement.style.height = `${size}px`;
+                    
+                    // Cor baseada no dono
+                    if (army.owner === 'player') {
+                        armyElement.style.backgroundColor = '#3498db';
+                    } else if (army.owner.startsWith('enemy')) {
+                        armyElement.style.backgroundColor = '#e74c3c';
+                    }
+                    
+                    // Tooltip com informações
+                    armyElement.title = `${army.owner === 'player' ? 'Seu exército' : enemyNames[army.owner] || 'Exército neutro'}\nSoldados: ${army.soldiers}\nArqueiros: ${army.archers}\nCavalaria: ${army.cavalry}`;
+                    
+                    map.appendChild(armyElement);
+                }
+            }
+        }
+
+        // Renderizar log de eventos
+        function renderEventLog() {
+            const eventLog = document.getElementById('event-log');
+            eventLog.innerHTML = '';
+            
+            for (const event of gameState.events) {
+                const eventElement = document.createElement('div');
+                eventElement.className = `event ${event.isNew ? 'new' : ''}`;
+                eventElement.textContent = `[${event.time}] ${event.message}`;
+                
+                // Marcar como lido
+                if (event.isNew) {
+                    setTimeout(() => {
+                        event.isNew = false;
+                        eventElement.classList.remove('new');
+                    }, 1000);
+                }
+                
+                eventLog.appendChild(eventElement);
+            }
+        }
+
+        // Renderizar chat
+        function renderChat() {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = '';
+            
+            for (const message of gameState.chatMessages) {
+                const messageElement = document.createElement('div');
+                messageElement.className = 'message';
+                
+                const senderElement = document.createElement('span');
+                senderElement.className = 'message-sender';
+                senderElement.textContent = `${message.sender}: `;
+                
+                const textElement = document.createElement('span');
+                textElement.textContent = message.message;
+                
+                messageElement.appendChild(senderElement);
+                messageElement.appendChild(textElement);
+                
+                chatMessages.appendChild(messageElement);
+            }
+            
+            // Rolagem automática para a última mensagem
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Salvar jogo
+        function saveGame() {
+            // Em ambiente real, descomente a linha abaixo para usar localStorage
+            // localStorage.setItem('empireWarsGameState', JSON.stringify(gameState));
+            
+            // Para demonstração, apenas mostramos uma notificação
+            console.log("Jogo salvo (localStorage desabilitado nesta demonstração)");
+        }
+
+        // Carregar jogo
+        function loadGame() {
+            // Em ambiente real, descomente o código abaixo para usar localStorage
+            /*
+            const savedGame = localStorage.getItem('empireWarsGameState');
+            if (savedGame) {
+                const parsedGame = JSON.parse(savedGame);
+                Object.assign(gameState, parsedGame);
+                console.log("Jogo carregado");
+            }
+            */
+            
+            // Para demonstração, apenas mostramos uma notificação
+            console.log("Carregando jogo (localStorage desabilitado nesta demonstração)");
+        }
+
+        // Iniciar o jogo quando a página carregar
+        window.onload = initGame;
+    </script>
+</body>
+</html>
