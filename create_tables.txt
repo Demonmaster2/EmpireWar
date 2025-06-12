@@ -1,0 +1,42 @@
+CREATE TABLE players (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    clan VARCHAR(20),
+    level INTEGER DEFAULT 1,
+    health INTEGER DEFAULT 100,
+    max_health INTEGER DEFAULT 100,
+    blood INTEGER DEFAULT 50,
+    max_blood INTEGER DEFAULT 50,
+    exp INTEGER DEFAULT 0,
+    exp_to_next INTEGER DEFAULT 100,
+    victories INTEGER DEFAULT 0,
+    coins INTEGER DEFAULT 100,
+    stats JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE inventory (
+    id SERIAL PRIMARY KEY,
+    player_id INTEGER REFERENCES players(id),
+    item_name VARCHAR(50) NOT NULL,
+    effect VARCHAR(20),
+    value FLOAT,
+    equipped BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE quests (
+    id SERIAL PRIMARY KEY,
+    player_id INTEGER REFERENCES players(id),
+    quest_key VARCHAR(50) NOT NULL,
+    progress INTEGER DEFAULT 0,
+    target INTEGER NOT NULL,
+    completed BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE chat_messages (
+    id SERIAL PRIMARY KEY,
+    player_id INTEGER REFERENCES players(id),
+    message TEXT NOT NULL,
+    type VARCHAR(20) DEFAULT 'normal',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eternal Shadows - Jogo de Vampiros</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #1a0033, #330066, #000000);
+            color: #f0f0f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: rgba(20, 0, 40, 0.9);
+            border-right: 2px solid #8b0000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .chat-area {
+            width: 350px;
+            background: rgba(0, 0, 20, 0.9);
+            border-left: 2px solid #8b0000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .character-info {
+            background: rgba(139, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #8b0000;
+        }
+
+        .character-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #8b0000, #ff4444);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        .health-bar, .blood-bar, .exp-bar {
+            background: rgba(0, 0, 0, 0.5);
+            height: 20px;
+            border-radius: 10px;
+            margin: 5px 0;
+            overflow: hidden;
+            border: 1px solid #666;
+        }
+
+        .health-fill {
+            background: linear-gradient(90deg, #ff0000, #cc0000);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .blood-fill {
+            background: linear-gradient(90deg, #8b0000, #660000);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .exp-fill {
+            background: linear-gradient(90deg, #ffd700, #ff8c00);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .abilities-section, .clan-section, .combat-section, .equipment-section {
+            background: rgba(139, 0, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #8b0000;
+        }
+
+        .equipment-slots {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .equipment-item {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #8b0000;
+        }
+
+        .ability-button, .action-button {
+            background: linear-gradient(45deg, #8b0000, #cc0000);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .ability-button:hover, .action-button:hover {
+            background: linear-gradient(45deg, #cc0000, #ff4444);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(139, 0, 0, 0.5);
+        }
+
+        .ability-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .clan-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .clan-card {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clan-card:hover {
+            border-color: #8b0000;
+            background: rgba(139, 0, 0, 0.2);
+        }
+
+        .clan-card.selected {
+            border-color: #ff4444;
+            background: rgba(139, 0, 0, 0.3);
+        }
+
+        .enemy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .enemy-card, .quest-card {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #444;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .enemy-card:hover {
+            border-color: #8b0000;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(139, 0, 0, 0.3);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-top: 1px solid #8b0000;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #8b0000;
+            color: #f0f0f0;
+            border-radius: 5px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            background: rgba(139, 0, 0, 0.1);
+        }
+
+        .message.system {
+            background: rgba(0, 139, 0, 0.1);
+            color: #90EE90;
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .ranking-table th, .ranking-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #8b0000;
+        }
+
+        .ranking-table th {
+            background: rgba(139, 0, 0, 0.3);
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            background: rgba(139, 0, 0, 0.2);
+            color: #f0f0f0;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            background: rgba(139, 0, 0, 0.5);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .cooldown {
+            font-size: 12px;
+            color: #ff6666;
+        }
+
+        .damage-number {
+            position: absolute;
+            color: #ff4444;
+            font-weight: bold;
+            font-size: 20px;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+
+        .status-effects {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .status-effect {
+            background: rgba(255, 255, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            border: 1px solid #ffff00;
+        }
+
+        h1, h2, h3 {
+            color: #ff4444;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #ff4444, #8b0000);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .combat-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .combat-health-bar {
+            width: 200px;
+        }
+
+        .combat-log {
+            background: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 10px;
+            height: 200px;
+            overflow-y: auto;
+        }
+
+        .combat-center {
+            font-size: 3em;
+            text-align: center;
+        }
+
+        .no-combat {
+            text-align: center;
+            padding: 50px;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .inventory-item {
+            background: rgba(139,0,0,0.2);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #8b0000;
+        }
+
+        .completed-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: gold;
+            color: black;
+            padding: 5px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Sidebar com informações do personagem -->
+        <div class="sidebar">
+            <div class="character-info">
+                <div class="character-avatar">🧛</div>
+                <h3 id="character-name">Vampiro Iniciante</h3>
+                <p id="character-clan">Clã: Nenhum</p>
+                <p id="character-level">Nível: 1</p>
+                
+                <div class="health-bar">
+                    <div class="health-fill" id="health-fill" style="width: 100%"></div>
+                </div>
+                <p>Vida: <span id="health-text">100/100</span></p>
+                
+                <div class="blood-bar">
+                    <div class="blood-fill" id="blood-fill" style="width: 100%"></div>
+                </div>
+                <p>Sangue: <span id="blood-text">50/50</span></p>
+                
+                <div class="exp-bar">
+                    <div class="exp-fill" id="exp-fill" style="width: 0%"></div>
+                </div>
+                <p>EXP: <span id="exp-text">0/100</span></p>
+                
+                <p>💰 Moedas: <span id="coins-text">100</span></p>
+                
+                <div class="status-effects" id="status-effects"></div>
+            </div>
+
+            <div class="equipment-section">
+                <h3>Equipamentos</h3>
+                <div id="equipment-list" class="equipment-slots">
+                    <p>Nenhum equipamento equipado</p>
+                </div>
+            </div>
+
+            <div class="clan-section">
+                <h3>Escolher Clã</h3>
+                <div class="clan-selector">
+                    <div class="clan-card" data-clan="ventrue">
+                        <h4>Ventrue</h4>
+                        <p>+20% Vida, Comando</p>
+                    </div>
+                    <div class="clan-card" data-clan="toreador">
+                        <h4>Toreador</h4>
+                        <p>+30% Velocidade, Charme</p>
+                    </div>
+                    <div class="clan-card" data-clan="nosferatu">
+                        <h4>Nosferatu</h4>
+                        <p>+25% Stealth, Força</p>
+                    </div>
+                    <div class="clan-card" data-clan="tremere">
+                        <h4>Tremere</h4>
+                        <p>+40% Magia de Sangue</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="abilities-section">
+                <h3>Habilidades</h3>
+                <button class="ability-button" data-ability="bite">
+                    🦷 Mordida (5 sangue)
+                </button>
+                <button class="ability-button" data-ability="shadow-step">
+                    👤 Passo Sombrio (10 sangue)
+                </button>
+                <button class="ability-button" data-ability="blood-heal">
+                    🩸 Cura de Sangue (15 sangue)
+                </button>
+                <button class="ability-button" data-ability="dominate">
+                    🧠 Dominação (20 sangue)
+                </button>
+                <button class="ability-button" data-ability="transform">
+                    🦇 Forma de Morcego (25 sangue)
+                </button>
+            </div>
+        </div>
+
+        <!-- Conteúdo principal -->
+        <div class="main-content">
+            <h1 class="title">🧛 Eternal Shadows</h1>
+            
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="hunt">Caçar</button>
+                <button class="tab-button" data-tab="combat">Combate</button>
+                <button class="tab-button" data-tab="shop">Loja</button>
+                <button class="tab-button" data-tab="quests">Missões</button>
+                <button class="tab-button" data-tab="ranking">Ranking</button>
+            </div>
+
+            <!-- Aba de Caça -->
+            <div class="tab-content active" id="hunt-tab">
+                <h2>Área de Caça</h2>
+                <p>Escolha seus inimigos para batalhar e ganhar experiência:</p>
+                
+                <div class="enemy-grid">
+                    <div class="enemy-card" data-enemy="human">
+                        <h3>🧑 Humano</h3>
+                        <p>Vida: 80</p>
+                        <p>EXP: 20</p>
+                        <p>Sangue: +10</p>
+                    </div>
+                    <div class="enemy-card" data-enemy="hunter">
+                        <h3>🏹 Caçador</h3>
+                        <p>Vida: 120</p>
+                        <p>EXP: 50</p>
+                        <p>Sangue: +5</p>
+                    </div>
+                    <div class="enemy-card" data-enemy="vampire">
+                        <h3>🧛‍♂️ Vampiro Rival</h3>
+                        <p>Vida: 150</p>
+                        <p>EXP: 80</p>
+                        <p>Sangue: +20</p>
+                    </div>
+                    <div class="enemy-card" data-enemy="werewolf">
+                        <h3>🐺 Lobisomem</h3>
+                        <p>Vida: 200</p>
+                        <p>EXP: 120</p>
+                        <p>Sangue: +15</p>
+                    </div>
+                    <div class="enemy-card" data-enemy="elder">
+                        <h3>👑 Ancião</h3>
+                        <p>Vida: 300</p>
+                        <p>EXP: 200</p>
+                        <p>Sangue: +30</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba de Combate -->
+            <div class="tab-content" id="combat-tab">
+                <div class="combat-section">
+                    <h2>Combate</h2>
+                    <div id="combat-area" style="display: none;">
+                        <div class="combat-area">
+                            <div style="text-align: center;">
+                                <h3 id="player-combat-name">Você</h3>
+                                <div class="health-bar combat-health-bar">
+                                    <div class="health-fill" id="player-combat-health" style="width: 100%"></div>
+                                </div>
+                                <p id="player-combat-health-text">100/100</p>
+                            </div>
+                            <div class="combat-center">⚔️</div>
+                            <div style="text-align: center;">
+                                <h3 id="enemy-combat-name">Inimigo</h3>
+                                <div class="health-bar combat-health-bar">
+                                    <div class="health-fill" id="enemy-combat-health" style="width: 100%"></div>
+                                </div>
+                                <p id="enemy-combat-health-text">100/100</p>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; margin: 20px 0;">
+                            <button class="action-button" id="attack-btn">⚔️ Atacar</button>
+                            <button class="action-button" id="defend-btn">🛡️ Defender</button>
+                            <button class="action-button" id="flee-btn">🏃 Fugir</button>
+                        </div>
+                        
+                        <div id="combat-log" class="combat-log"></div>
+                    </div>
+                    <div id="no-combat" class="no-combat">
+                        <p>Nenhum combate ativo. Vá para a área de caça para encontrar inimigos!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba de Loja -->
+            <div class="tab-content" id="shop-tab">
+                <h2>🏪 Loja do Submundo</h2>
+                <p>Comerciante: "Bem-vindo, criatura da noite. O que deseja adquirir?"</p>
+                
+                <div class="enemy-grid">
+                    <div class="enemy-card" data-item="health-potion">
+                        <h3>🧪 Poção de Vida</h3>
+                        <p>Restaura 50 HP</p>
+                        <p>💰 Preço: 25 moedas</p>
+                        <button class="action-button" data-item="health-potion">Comprar</button>
+                    </div>
+                    <div class="enemy-card" data-item="blood-vial">
+                        <h3>🩸 Frasco de Sangue</h3>
+                        <p>Restaura 30 Sangue</p>
+                        <p>💰 Preço: 20 moedas</p>
+                        <button class="action-button" data-item="blood-vial">Comprar</button>
+                    </div>
+                    <div class="enemy-card" data-item="silver-amulet">
+                        <h3>🔮 Amuleto de Prata</h3>
+                        <p>+10% resistência a dano</p>
+                        <p>💰 Preço: 100 moedas</p>
+                        <button class="action-button" data-item="silver-amulet">Comprar</button>
+                    </div>
+                    <div class="enemy-card" data-item="ancient-tome">
+                        <h3>📜 Tomo Ancestral</h3>
+                        <p>+500 EXP instantâneo</p>
+                        <p>💰 Preço: 200 moedas</p>
+                        <button class="action-button" data-item="ancient-tome">Comprar</button>
+                    </div>
+                    <div class="enemy-card" data-item="blood-crystal">
+                        <h3>💎 Cristal de Sangue</h3>
+                        <p>+20 Sangue máximo permanente</p>
+                        <p>💰 Preço: 500 moedas</p>
+                        <button class="action-button" data-item="blood-crystal">Comprar</button>
+                    </div>
+                    <div class="enemy-card" data-item="vampire-cloak">
+                        <h3>🧥 Capa Vampírica</h3>
+                        <p>+15% velocidade e stealth</p>
+                        <p>💰 Preço: 300 moedas</p>
+                        <button class="action-button" data-item="vampire-cloak">Comprar</button>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <h3>📦 Seu Inventário</h3>
+                    <div id="inventory" class="inventory-grid">
+                        <p>Inventário vazio</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba de Missões -->
+            <div class="tab-content" id="quests-tab">
+                <h2>📋 Missões Vampíricas</h2>
+                <p>Complete missões para ganhar recompensas especiais!</p>
+                
+                <div id="quest-list">
+                    <div class="quest-card" data-quest="first-blood">
+                        <h3>🩸 Primeiro Sangue</h3>
+                        <p>Derrote 5 humanos</p>
+                        <p>Progresso: <span id="quest-first-blood-progress">0/5</span></p>
+                        <p>Recompensa: 100 EXP + 50 moedas</p>
+                        <div class="exp-bar" style="margin: 10px 0;">
+                            <div class="exp-fill" id="quest-first-blood-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="quest-card" data-quest="hunter-slayer">
+                        <h3>🏹 Caçador de Caçadores</h3>
+                        <p>Derrote 3 caçadores</p>
+                        <p>Progresso: <span id="quest-hunter-slayer-progress">0/3</span></p>
+                        <p>Recompensa: 200 EXP + Habilidade especial</p>
+                        <div class="exp-bar" style="margin: 10px 0;">
+                            <div class="exp-fill" id="quest-hunter-slayer-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="quest-card" data-quest="blood-collector">
+                        <h3>🧪 Coletor de Sangue</h3>
+                        <p>Colete 200 pontos de sangue</p>
+                        <p>Progresso: <span id="quest-blood-collector-progress">0/200</span></p>
+                        <p>Recompensa: +50 Sangue máximo permanente</p>
+                        <div class="exp-bar" style="margin: 10px 0;">
+                            <div class="exp-fill" id="quest-blood-collector-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="quest-card" data-quest="elder-challenge">
+                        <h3>👑 Desafio do Ancião</h3>
+                        <p>Derrote 1 Ancião</p>
+                        <p>Progresso: <span id="quest-elder-challenge-progress">0/1</span></p>
+                        <p>Recompensa: Título "Matador de Anciões" + 1000 moedas</p>
+                        <div class="exp-bar" style="margin: 10px 0;">
+                            <div class="exp-fill" id="quest-elder-challenge-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba de Ranking -->
+            <div class="tab-content" id="ranking-tab">
+                <h2>Ranking dos Vampiros</h2>
+                <table class="ranking-table">
+                    <thead>
+                        <tr>
+                            <th>Posição</th>
+                            <th>Nome</th>
+                            <th>Clã</th>
+                            <th>Nível</th>
+                            <th>EXP</th>
+                            <th>Vitórias</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ranking-body">
+                        <tr>
+                            <td>1</td>
+                            <td>Lord Drácula</td>
+                            <td>Ventrue</td>
+                            <td>50</td>
+                            <td>125000</td>
+                            <td>234</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Condessa Carmilla</td>
+                            <td>Toreador</td>
+                            <td>45</td>
+                            <td>98500</td>
+                            <td>189</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Mestre Tremere</td>
+                            <td>Tremere</td>
+                            <td>42</td>
+                            <td>87300</td>
+                            <td>167</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>Sombra Eterna</td>
+                            <td>Nosferatu</td>
+                            <td>38</td>
+                            <td>72100</td>
+                            <td>145</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Você</td>
+                            <td id="player-clan-rank">Nenhum</td>
+                            <td id="player-level-rank">1</td>
+                            <td id="player-exp-rank">0</td>
+                            <td id="player-victories-rank">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Chat -->
+        <div class="chat-area">
+            <div class="chat-messages" id="chat-messages">
+                <div class="message system">
+                    Bem-vindo ao Eternal Shadows! Use o chat para conversar com outros vampiros.
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chat-input" placeholder="Digite sua mensagem..." maxlength="200">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado do jogo
+        let playerState = null;
+        let currentEnemy = null;
+        let inCombat = false;
+        let cooldowns = {};
+        let inventory = [];
+        let quests = {
+            "first-blood": { progress: 0, target: 5, completed: false },
+            "hunter-slayer": { progress: 0, target: 3, completed: false },
+            "blood-collector": { progress: 0, target: 200, completed: false },
+            "elder-challenge": { progress: 0, target: 1, completed: false }
+        };
+        let statusEffects = [];
+
+        // Dados dos clãs
+        const clans = {
+            ventrue: {
+                name: "Ventrue",
+                bonuses: { healthMultiplier: 1.2, commandPower: true },
+                description: "Nobres e comandantes natos"
+            },
+            toreador: {
+                name: "Toreador",
+                bonuses: { speedMultiplier: 1.3, charm: true },
+                description: "Artistas e sedutores"
+            },
+            nosferatu: {
+                name: "Nosferatu",
+                bonuses: { stealth: 1.25, strengthMultiplier: 1.15 },
+                description: "Mestres das sombras"
+            },
+            tremere: {
+                name: "Tremere",
+                bonuses: { bloodMagic: 1.4, manaBonus: 20 },
+                description: "Magos do sangue"
+            }
+        };
+
+        // Dados dos inimigos
+        const enemies = {
+            human: { name: "Humano", health: 80, exp: 20, blood: 10, difficulty: 1 },
+            hunter: { name: "Caçador", health: 120, exp: 50, blood: 5, difficulty: 3 },
+            vampire: { name: "Vampiro Rival", health: 150, exp: 80, blood: 20, difficulty: 4 },
+            werewolf: { name: "Lobisomem", health: 200, exp: 120, blood: 15, difficulty: 5 },
+            elder: { name: "Ancião", health: 300, exp: 200, blood: 30, difficulty: 8 }
+        };
+
+        // Habilidades
+        const abilities = {
+            bite: { name: "Mordida", cost: 5, damage: [15, 25], effect: "heal" },
+            "shadow-step": { name: "Passo Sombrio", cost: 10, damage: [20, 35], effect: "stealth" },
+            "blood-heal": { name: "Cura de Sangue", cost: 15, heal: [30, 50] },
+            dominate: { name: "Dominação", cost: 20, damage: [25, 40], effect: "stun" },
+            transform: { name: "Forma de Morcego", cost: 25, damage: [35, 50], effect: "fly" }
+        };
+
+        // Dados da loja
+        const shopItems = {
+            "health-potion": { name: "Poção de Vida", price: 25, effect: "heal", value: 50 },
+            "blood-vial": { name: "Frasco de Sangue", price: 20, effect: "blood", value: 30 },
+            "silver-amulet": { name: "Amuleto de Prata", price: 100, effect: "resistance", value: 0.1 },
+            "ancient-tome": { name: "Tomo Ancestral", price: 200, effect: "exp", value: 500 },
+            "blood-crystal": { name: "Cristal de Sangue", price: 500, effect: "max-blood", value: 20 },
+            "vampire-cloak": { name: "Capa Vampírica", price: 300, effect: "speed", value: 0.15 }
+        };
+
+        // Funções de API
+        async function loadPlayer(playerId) {
+            try {
+                const response = await fetch(`/.netlify/functions/player?id=${playerId}`);
+                if (response.ok) {
+                    playerState = await response.json();
+                    await loadInventory();
+                    await loadQuests();
+                    await loadChatMessages();
+                    updateUI();
+                } else {
+                    const newPlayer = {
+                        name: "Vampiro Iniciante",
+                        clan: null,
+                        level: 1,
+                        health: 100,
+                        max_health: 100,
+                        blood: 50,
+                        max_blood: 50,
+                        exp: 0,
+                        exp_to_next: 100,
+                        victories: 0,
+                        coins: 100
+                    };
+                    const createResponse = await fetch('/.netlify/functions/player', {
+                        method: 'POST',
+                        body: JSON.stringify(newPlayer),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    playerState = await createResponse.json();
+                    await initializeQuests();
+                    await loadInventory();
+                    await loadQuests();
+                    await loadChatMessages();
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar jogador:', error);
+            }
+        }
+
+        async function savePlayer() {
+            try {
+                const response = await fetch(`/.netlify/functions/player?id=${playerState.id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(playerState),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (response.ok) {
+                    playerState = await response.json();
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Erro ao salvar jogador:', error);
+            }
+        }
+
+        async function loadInventory() {
+            try {
+                const response = await fetch(`/.netlify/functions/inventory?player_id=${playerState.id}`);
+                if (response.ok) {
+                    inventory = await response.json();
+                    updateInventoryUI();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar inventário:', error);
+            }
+        }
+
+        async function saveInventoryItem(item) {
+            try {
+                const response = await fetch('/.netlify/functions/inventory', {
+                    method: 'POST',
+                    body: JSON.stringify({ ...item, player_id: playerState.id }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (response.ok) {
+                    await loadInventory();
+                }
+            } catch (error) {
+                console.error('Erro ao salvar item:', error);
+            }
+        }
+
+        async function updateInventoryItem(itemId, updates) {
+            try {
+                const response = await fetch(`/.netlify/functions/inventory?id=${itemId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(updates),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (response.ok) {
+                    await loadInventory();
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar item:', error);
+            }
+        }
+
+        async function loadQuests() {
+            try {
+                const response = await fetch(`/.netlify/functions/quests?player_id=${playerState.id}`);
+                if (response.ok) {
+                    const dbQuests = await response.json();
+                    dbQuests.forEach(q => {
+                        quests[q.quest_key] = {
+                            progress: q.progress,
+                            target: q.target,
+                            completed: q.completed
+                        };
+                    });
+                    updateQuestUI();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar missões:', error);
+            }
+        }
+
+        async function saveQuest(questKey) {
+            try {
+                const quest = quests[questKey];
+                const response = await fetch('/.netlify/functions/quests', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        player_id: playerState.id,
+                        quest_key: questKey,
+                        progress: quest.progress,
+                        target: quest.target,
+                        completed: quest.completed
+                    }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (response.ok) {
+                    await loadQuests();
+                }
+            } catch (error) {
+                console.error('Erro ao salvar missão:', error);
+            }
+        }
+
+        async function updateQuest(questKey, updates) {
+            try {
+                const response = await fetch(`/.netlify/functions/quests?quest_key=${questKey}&player_id=${playerState.id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(updates),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (response.ok) {
+                    await loadQuests();
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar missão:', error);
+            }
+        }
+
+        async function initializeQuests() {
+            try {
+                for (const questKey of Object.keys(quests)) {
+                    await saveQuest(questKey);
+                }
+            } catch (error) {
+                console.error('Erro ao inicializar missões:', error);
+            }
+        }
+
+        async function loadChatMessages() {
+            try {
+                const response = await fetch('/.netlify/functions/chat');
+                if (response.ok) {
+                    const messages = await response.json();
+                    const chatMessages = document.getElementById('chat-messages');
+                    chatMessages.innerHTML = '';
+                    messages.forEach(msg => {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = `message ${msg.type}`;
+                        messageDiv.textContent = msg.player_id ? `${msg.player_name}: ${msg.message}` : msg.message;
+                        chatMessages.appendChild(messageDiv);
+                    });
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar mensagens:', error);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (message && playerState) {
+                try {
+                    await fetch('/.netlify/functions/chat', {
+                        method: 'POST',
+                        body: JSON.stringify({ player_id: playerState.id, message, type: 'normal' }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    input.value = '';
+                    await loadChatMessages();
+                } catch (error) {
+                    console.error('Erro ao enviar mensagem:', error);
+                }
+            }
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            const playerId = localStorage.getItem('playerId') || Math.floor(Math.random() * 1000000);
+            localStorage.setItem('playerId', playerId);
+            loadPlayer(playerId);
+            setupEventListeners();
+            startGameLoop();
+        });
+
+        function setupEventListeners() {
+            // Seleção de clã
+            document.querySelectorAll('.clan-card').forEach(card => {
+                card.addEventListener('click', async () => {
+                    const clan = card.dataset.clan;
+                    await selectClan(clan);
+                });
+            });
+
+            // Habilidades
+            document.querySelectorAll('.ability-button').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const ability = button.dataset.ability;
+                    await useAbility(ability);
+                });
+            });
+
+            // Inimigos
+            document.querySelectorAll('.enemy-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const enemy = card.dataset.enemy;
+                    startCombat(enemy);
+                });
+            });
+
+            // Tabs
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const tab = button.dataset.tab;
+                    switchTab(tab);
+                });
+            });
+
+            // Combate
+            document.getElementById('attack-btn').addEventListener('click', () => performAction('attack'));
+            document.getElementById('defend-btn').addEventListener('click', () => performAction('defend'));
+            document.getElementById('flee-btn').addEventListener('click', () => performAction('flee'));
+
+            // Loja
+            document.querySelectorAll('[data-item]').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const item = button.dataset.item;
+                    await buyItem(item);
+                });
+            });
+
+            // Chat
+            document.getElementById('chat-input').addEventListener('keypress', e => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+
+        async function selectClan(clanKey) {
+            if (!playerState) return;
+
+            document.querySelectorAll('.clan-card').forEach(card => card.classList.remove('selected'));
+            document.querySelector(`[data-clan="${clanKey}"]`).classList.add('selected');
+
+            playerState.clan = clanKey;
+            const clan = clans[clanKey];
+            if (clan.bonuses.healthMultiplier) {
+                playerState.max_health = Math.floor(100 * clan.bonuses.healthMultiplier);
+                playerState.health = playerState.max_health;
+            }
+            if (clan.bonuses.manaBonus) {
+                playerState.max_blood += clan.bonuses.manaBonus;
+                playerState.blood = playerState.max_blood;
+            }
+
+            await savePlayer();
+            addChatMessage(`Você se juntou ao clã ${clan.name}!`, 'system');
+        }
+
+        async function useAbility(abilityKey) {
+            if (!playerState) return;
+
+            const ability = abilities[abilityKey];
+            if (cooldowns[abilityKey] && cooldowns[abilityKey] > Date.now()) {
+                addChatMessage(`Habilidade ${ability.name} ainda está em cooldown!`, 'system');
+                return;
+            }
+
+            if (playerState.blood < ability.cost) {
+                addChatMessage(`Sangue insuficiente para usar ${ability.name}!`, 'system');
+                return;
+            }
+
+            playerState.blood -= ability.cost;
+            cooldowns[abilityKey] = Date.now() + 5000;
+
+            if (ability.heal) {
+                const healAmount = randomBetween(ability.heal[0], ability.heal[1]);
+                playerState.health = Math.min(playerState.health + healAmount, playerState.max_health);
+                addChatMessage(`Você se curou em ${healAmount} pontos de vida!`, 'system');
+            }
+
+            if (inCombat && ability.damage) {
+                const damage = randomBetween(ability.damage[0], ability.damage[1]);
+                currentEnemy.health -= damage;
+                addCombatLog(`Você usou ${ability.name} e causou ${damage} de dano!`);
+
+                if (currentEnemy.health <= 0) {
+                    await endCombat(true);
+                } else {
+                    await enemyTurn();
+                }
+            }
+
+            await savePlayer();
+        }
+
+        function startCombat(enemyKey) {
+            currentEnemy = { ...enemies[enemyKey], maxHealth: enemies[enemyKey].health };
+            inCombat = true;
+
+            switchTab('combat');
+            document.getElementById('combat-area').style.display = 'block';
+            document.getElementById('no-combat').style.display = 'none';
+
+            document.getElementById('enemy-combat-name').textContent = currentEnemy.name;
+            document.getElementById('combat-log').innerHTML = '';
+            addCombatLog(`Combate iniciado contra ${currentEnemy.name}!`);
+            updateCombatUI();
+        }
+
+        async function performAction(action) {
+            if (!inCombat || !playerState || !currentEnemy) return;
+
+            switch (action) {
+                case 'attack':
+                    const baseDamage = randomBetween(15, 25);
+                    const damage = calculateDamage(baseDamage, true);
+                    currentEnemy.health -= damage;
+                    addCombatLog(`Você atacou e causou ${damage} de dano!`);
+
+                    if (currentEnemy.health <= 0) {
+                        await endCombat(true);
+                        return;
+                    }
+                    break;
+
+                case 'defend':
+                    addCombatLog(`Você se defendeu, reduzindo o próximo dano em 50%!`);
+                    playerState.defending = true;
+                    break;
+
+                case 'flee':
+                    if (Math.random() < 0.7) {
+                        addCombatLog(`Você fugiu do combate!`);
+                        await endCombat(false);
+                        return;
+                    } else {
+                        addCombatLog(`Falha ao fugir!`);
+                    }
+                    break;
+            }
+
+            await enemyTurn();
+            await savePlayer();
+            updateCombatUI();
+        }
+
+        async function enemyTurn() {
+            if (!inCombat || !playerState || !currentEnemy) return;
+
+            const baseEnemyDamage = randomBetween(10, 20) * currentEnemy.difficulty;
+            let actualDamage = calculateDamageReduction(baseEnemyDamage);
+
+            if (playerState.defending) {
+                actualDamage = Math.floor(actualDamage * 0.5);
+                playerState.defending = false;
+            }
+
+            playerState.health -= actualDamage;
+            addCombatLog(`${currentEnemy.name} atacou e causou ${actualDamage} de dano!`);
+
+            if (playerState.health <= 0) {
+                await endCombat(false);
+            }
+            await savePlayer();
+        }
+
+        async function endCombat(victory) {
+            if (!playerState) return;
+
+            inCombat = false;
+
+            if (victory) {
+                const expGained = currentEnemy.exp;
+                const bloodGained = currentEnemy.blood;
+                const coinsGained = Math.floor(currentEnemy.exp / 4);
+
+                playerState.exp += expGained;
+                playerState.blood = Math.min(playerState.blood + bloodGained, playerState.max_blood);
+                playerState.victories++;
+                playerState.coins += coinsGained;
+
+                await updateQuests(currentEnemy.name);
+
+                addCombatLog(`🎉 Vitória! Você ganhou ${expGained} EXP, ${bloodGained} sangue e ${coinsGained} moedas!`);
+                addChatMessage(`Derrotou ${currentEnemy.name} e ganhou ${expGained} EXP!`, 'system');
+
+                while (playerState.exp >= playerState.exp_to_next) {
+                    await levelUp();
+                }
+            } else {
+                if (playerState.health <= 0) {
+                    playerState.health = 1;
+                    addCombatLog(`💀 Você foi derrotado! Perdeu sangue e experiência.`);
+                    playerState.blood = Math.max(1, playerState.blood - 10);
+                    playerState.exp = Math.max(0, playerState.exp - 20);
+                } else {
+                    addCombatLog(`🏃 Você fugiu do combate.`);
+                }
+            }
+
+            setTimeout(() => {
+                document.getElementById('combat-area').style.display = 'none';
+                document.getElementById('no-combat').style.display = 'block';
+                currentEnemy = null;
+            }, 3000);
+
+            await savePlayer();
+        }
+
+        async function levelUp() {
+            if (!playerState) return;
+
+            playerState.level++;
+            playerState.exp -= playerState.exp_to_next;
+            playerState.exp_to_next = Math.floor(playerState.exp_to_next * 1.5);
+
+            const healthBonus = 20;
+            const bloodBonus = 10;
+
+            playerState.max_health += healthBonus;
+            playerState.health = playerState.max_health;
+            playerState.max_blood += bloodBonus;
+            playerState.blood = playerState.max_blood;
+
+            const titles = [
+                "Vampiro Iniciante", "Neófito", "Vampiro Jovem", "Vampiro Experiente",
+                "Vampiro Veterano", "Ancilla", "Vampiro Ancião", "Mestre Vampiro",
+                "Lorde das Trevas", "Príncipe Vampírico"
+            ];
+            const titleIndex = Math.min(Math.floor(playerState.level / 5), titles.length - 1);
+            playerState.name = titles[titleIndex];
+
+            await savePlayer();
+            addChatMessage(`🎆 LEVEL UP! Agora você é nível ${playerState.level}!`, 'system');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        function addChatMessage(message, type = 'normal') {
+            const messagesContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = message;
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addCombatLog(message) {
+            const combatLog = document.getElementById('combat-log');
+            const logEntry = document.createElement('div');
+            logEntry.textContent = message;
+            logEntry.style.marginBottom = '5px';
+
+            combatLog.appendChild(logEntry);
+            combatLog.scrollTop = combatLog.scrollHeight;
+        }
+
+        function updateUI() {
+            if (!playerState) return;
+
+            // Informações do personagem
+            document.getElementById('character-name').textContent = playerState.name;
+            document.getElementById('character-clan').textContent = `Clã: ${playerState.clan ? clans[playerState.clan].name : 'Nenhum'}`;
+            document.getElementById('character-level').textContent = `Nível: ${playerState.level}`;
+
+            const healthPercent = (playerState.health / playerState.max_health) * 100;
+            const bloodPercent = (playerState.blood / playerState.max_blood) * 100;
+            const expPercent = (playerState.exp / playerState.exp_to_next) * 100;
+
+            document.getElementById('health-fill').style.width = `${healthPercent}%`;
+            document.getElementById('blood-fill').style.width = `${bloodPercent}%`;
+            document.getElementById('exp-fill').style.width = `${expPercent}%`;
+
+            document.getElementById('health-text').textContent = `${playerState.health}/${playerState.max_health}`;
+            document.getElementById('blood-text').textContent = `${playerState.blood}/${playerState.max_blood}`;
+            document.getElementById('exp-text').textContent = `${playerState.exp}/${playerState.exp_to_next}`;
+            document.getElementById('coins-text').textContent = playerState.coins;
+
+            // Habilidades
+            document.querySelectorAll('.ability-button').forEach(button => {
+                const ability = button.dataset.ability;
+                const abilityData = abilities[ability];
+                const cooldownTime = cooldowns[ability];
+                const currentTime = Date.now();
+
+                if (cooldownTime && cooldownTime > currentTime) {
+                    const remainingTime = Math.ceil((cooldownTime - currentTime) / 1000);
+                    button.disabled = true;
+                    button.innerHTML = button.innerHTML.split('<br>')[0] + `<br><span class="cooldown">${remainingTime}s</span>`;
+                } else if (playerState.blood < abilityData.cost) {
+                    button.disabled = true;
+                    button.innerHTML = button.innerHTML.split('<br>')[0];
+                } else {
+                    button.disabled = false;
+                    button.innerHTML = button.innerHTML.split('<br>')[0];
+                }
+            });
+
+            // Efeitos de status
+            updateStatusEffects();
+
+            // Ranking
+            updateRanking();
+
+            // Quests
+            updateQuestUI();
+
+            // Inventário
+            updateInventoryUI();
+
+            // Equipamentos
+            updateEquipmentUI();
+        }
+
+        function updateCombatUI() {
+            if (!inCombat || !currentEnemy || !playerState) return;
+
+            const playerHealthPercent = (playerState.health / playerState.max_health) * 100;
+            document.getElementById('player-combat-health').style.width = `${playerHealthPercent}%`;
+            document.getElementById('player-combat-health-text').textContent = `${playerState.health}/${playerState.max_health}`;
+
+            const enemyHealthPercent = (currentEnemy.health / currentEnemy.maxHealth) * 100;
+            document.getElementById('enemy-combat-health').style.width = `${enemyHealthPercent}%`;
+            document.getElementById('enemy-combat-health-text').textContent = `${currentEnemy.health}/${currentEnemy.maxHealth}`;
+        }
+
+        function updateStatusEffects() {
+            const container = document.getElementById('status-effects');
+            container.innerHTML = '';
+
+            statusEffects.forEach(effect => {
+                const effectDiv = document.createElement('div');
+                effectDiv.className = 'status-effect';
+                effectDiv.textContent = effect.name;
+                container.appendChild(effectDiv);
+            });
+        }
+
+        function updateRanking() {
+            if (!playerState) return;
+
+            document.getElementById('player-clan-rank').textContent = playerState.clan ? clans[playerState.clan].name : 'Nenhum';
+            document.getElementById('player-level-rank').textContent = playerState.level;
+            document.getElementById('player-exp-rank').textContent = playerState.exp;
+            document.getElementById('player-victories-rank').textContent = playerState.victories;
+        }
+
+        function updateEquipmentUI() {
+            const equipmentDiv = document.getElementById('equipment-list');
+            const equippedItems = inventory.filter(item => item.equipped);
+
+            if (equippedItems.length === 0) {
+                equipmentDiv.innerHTML = '<p>Nenhum equipamento equipado</p>';
+                return;
+            }
+
+            let equipmentHTML = '<div class="equipment-slots">';
+            equippedItems.forEach(item => {
+                equipmentHTML += `<div class="equipment-item"><p>${item.item_name}</p></div>`;
+            });
+            equipmentHTML += '</div>';
+
+            equipmentDiv.innerHTML = equipmentHTML;
+        }
+
+        function startGameLoop() {
+            setInterval(async () => {
+                if (playerState && playerState.blood < playerState.max_blood) {
+                    playerState.blood = Math.min(playerState.blood + 1, playerState.max_blood);
+                    await savePlayer();
+                }
+
+                statusEffects = statusEffects.filter(effect => effect.duration > Date.now());
+                updateUI();
+            }, 10000);
+
+            setInterval(() => {
+                updateUI();
+            }, 1000);
+        }
+
+        function randomBetween(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Eventos especiais
+        setInterval(async () => {
+            if (Math.random() < 0.1 && playerState) {
+                const events = [
+                    {
+                        message: "🌙 A lua cheia fortalece seu poder! +10 sangue máximo temporário.",
+                        effect: async () => {
+                            playerState.max_blood += 10;
+                            playerState.blood = playerState.max_blood;
+                            statusEffects.push({ name: "Lua Cheia", duration: Date.now() + 60000 });
+                            await savePlayer();
+                        }
+                    },
+                    {
+                        message: "⚰️ Você encontrou uma cripta antiga e ganhou experiência.",
+                        effect: async () => {
+                            playerState.exp += 25;
+                            while (playerState.exp >= playerState.exp_to_next) {
+                                await levelUp();
+                            }
+                            await savePlayer();
+                        }
+                    },
+                    {
+                        message: "🩸 Você encontrou um frasco de sangue ancestral!",
+                        effect: async () => {
+                            playerState.health = playerState.max_health;
+                            playerState.blood = playerState.max_blood;
+                            await savePlayer();
+                        }
+                    }
+                ];
+
+                const randomEvent = events[Math.floor(Math.random() * events.length)];
+                addChatMessage(randomEvent.message, 'system');
+                await randomEvent.effect();
+            }
+        }, 60000);
+
+        // NPCs no chat
+        setInterval(async () => {
+            if (Math.random() < 0.2) {
+                const messages = [
+                    "Lord Drácula: A noite é jovem, meus filhos das trevas.",
+                    "Condessa Carmilla: Alguém viu caçadores na área leste?",
+                    "Mestre Tremere: O poder do sangue flui através de rituais antigos.",
+                    "Sombra Eterna: As sombras sussurram segredos para aqueles que sabem escutar."
+                ];
+                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                await fetch('/.netlify/functions/chat', {
+                    method: 'POST',
+                    body: JSON.stringify({ player_id: null, message: randomMessage, type: 'system' }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                await loadChatMessages();
+            }
+        }, 45000);
+
+        // Loja
+        async function buyItem(itemKey) {
+            if (!playerState) return;
+
+            const item = shopItems[itemKey];
+            if (!item) {
+                addChatMessage("🚫 Item inválido!", 'system');
+                return;
+            }
+
+            if (playerState.coins < item.price) {
+                addChatMessage("💰 Moedas insuficientes!", 'system');
+                return;
+            }
+
+            playerState.coins -= item.price;
+
+            switch (item.effect) {
+                case 'heal':
+                    playerState.health = Math.min(playerState.health + item.value, playerState.max_health);
+                    addChatMessage(`🧪 Você usou ${item.name} e recuperou ${item.value} de vida!`, 'system');
+                    break;
+                case 'blood':
+                    playerState.blood = Math.min(playerState.blood + item.value, playerState.max_blood);
+                    addChatMessage(`🩸 Você usou ${item.name} e recuperou ${item.value} de sangue!`, 'system');
+                    break;
+                case 'exp':
+                    playerState.exp += item.value;
+                    addChatMessage(`📜 Você ganhou ${item.value} de experiência!`, 'system');
+                    while (playerState.exp >= playerState.exp_to_next) {
+                        await levelUp();
+                    }
+                    break;
+                case 'max-blood':
+                    playerState.max_blood += item.value;
+                    playerState.blood += item.value;
+                    addChatMessage(`💎 Seu sangue máximo aumentou em ${item.value}!`, 'system');
+                    break;
+                case 'resistance':
+                case 'speed':
+                    await saveInventoryItem({ item_name: item.name, effect: item.effect, value: item.value, equipped: false });
+                    addChatMessage(`${item.name} foi adicionado ao seu inventário!`, 'system');
+                    break;
+            }
+
+            await savePlayer();
+        }
+
+        // Missões
+        async function updateQuests(enemyName) {
+            if (!playerState) return;
+
+            const stats = {
+                humansKilled: enemyName === 'Humano' ? (quests['first-blood'].progress + 1) : quests['first-blood'].progress,
+                huntersKilled: enemyName === 'Caçador' ? (quests['hunter-slayer'].progress + 1) : quests['hunter-slayer'].progress,
+                bloodCollected: quests['blood-collector'].progress + (currentEnemy ? currentEnemy.blood : 0),
+                eldersKilled: enemyName === 'Ancião' ? (quests['elder-challenge'].progress + 1) : quests['elder-challenge'].progress
+            };
+
+            if (enemyName === 'Humano' && !quests['first-blood'].completed) {
+                quests['first-blood'].progress = Math.min(stats.humansKilled, quests['first-blood'].target);
+                await updateQuest('first-blood', { progress: quests['first-blood'].progress });
+                if (quests['first-blood'].progress >= quests['first-blood'].target) {
+                    await completeQuest('first-blood');
+                }
+            }
+
+            if (enemyName === 'Caçador' && !quests['hunter-slayer'].completed) {
+                quests['hunter-slayer'].progress = Math.min(stats.huntersKilled, quests['hunter-slayer'].target);
+                await updateQuest('hunter-slayer', { progress: quests['hunter-slayer'].progress });
+                if (quests['hunter-slayer'].progress >= quests['hunter-slayer'].target) {
+                    await completeQuest('hunter-slayer');
+                }
+            }
+
+            if (!quests['blood-collector'].completed) {
+                quests['blood-collector'].progress = Math.min(stats.bloodCollected, quests['blood-collector'].target);
+                await updateQuest('blood-collector', { progress: quests['blood-collector'].progress });
+                if (quests['blood-collector'].progress >= quests['blood-collector'].target) {
+                    await completeQuest('blood-collector');
+                }
+            }
+
+            if (enemyName === 'Ancião' && !quests['elder-challenge'].completed) {
+                quests['elder-challenge'].progress = Math.min(stats.eldersKilled, quests['elder-challenge'].target);
+                await updateQuest('elder-challenge', { progress: quests['elder-challenge'].progress });
+                if (quests['elder-challenge'].progress >= quests['elder-challenge'].target) {
+                    await completeQuest('elder-challenge');
+                }
+            }
+        }
+
+        async function completeQuest(questKey) {
+            if (!playerState) return;
+
+            quests[questKey].completed = true;
+            await updateQuest(questKey, { completed: true });
+
+            switch (questKey) {
+                case 'first-blood':
+                    playerState.exp += 100;
+                    playerState.coins += 50;
+                    addChatMessage('🎉 Missão "Primeiro Sangue" concluída! +100 EXP, +50 moedas', 'system');
+                    break;
+                case 'hunter-slayer':
+                    playerState.exp += 200;
+                    addChatMessage('🎉 Missão "Caçador de Caçadores" concluída! +200 EXP', 'system');
+                    break;
+                case 'blood-collector':
+                    playerState.max_blood += 50;
+                    playerState.blood += 50;
+                    addChatMessage('🎉 Missão "Coletor de Sangue" concluída! +50 Sangue máximo!', 'system');
+                    break;
+                case 'elder-challenge':
+                    playerState.coins += 1000;
+                    playerState.name = "Matador de Anciões " + playerState.name;
+                    addChatMessage('🎉 Missão "Desafio do Ancião" concluída! Título especial! +1000 moedas', 'system');
+                    break;
+            }
+
+            while (playerState.exp >= playerState.exp_to_next) {
+                await levelUp();
+            }
+            await savePlayer();
+        }
+
+        function updateQuestUI() {
+            Object.keys(quests).forEach(questKey => {
+                const quest = quests[questKey];
+                const progressElement = document.getElementById(`quest-${questKey}-progress`);
+                const barElement = document.getElementById(`quest-${questKey}-bar`);
+
+                if (progressElement) {
+                    progressElement.textContent = `${quest.progress}/${quest.target}`;
+                }
+
+                if (barElement) {
+                    const percentage = (quest.progress / quest.target) * 100;
+                    barElement.style.width = `${Math.min(percentage, 100)}%`;
+                }
+
+                const questCard = document.querySelector(`[data-quest="${questKey}"]`);
+                if (questCard && quest.completed) {
+                    questCard.style.opacity = '0.5';
+                    questCard.style.border = '2px solid gold';
+                    if (!questCard.querySelector('.completed-badge')) {
+                        const badge = document.createElement('div');
+                        badge.className = 'completed-badge';
+                        badge.textContent = '✅ COMPLETA';
+                        questCard.appendChild(badge);
+                    }
+                }
+            });
+        }
+
+        function updateInventoryUI() {
+            const inventoryDiv = document.getElementById('inventory');
+
+            if (inventory.length === 0) {
+                inventoryDiv.innerHTML = '<p>Inventário vazio</p>';
+                return;
+            }
+
+            let inventoryHTML = '<div class="inventory-grid">';
+            inventory.forEach((item, index) => {
+                inventoryHTML += `
+                    <div class="inventory-item">
+                        <h4>${item.item_name}</h4>
+                        <p>Efeito: ${getItemEffectDescription(item)}</p>
+                        <button class="action-button" onclick="useInventoryItem(${item.id})">
+                            ${item.effect === 'resistance' || item.effect === 'speed' ? 'Equipar' : 'Usar'}
+                        </button>
+                    </div>
+                `;
+            });
+            inventoryHTML += '</div>';
+            inventoryDiv.innerHTML = inventoryHTML;
+        }
+
+        function getItemEffectDescription(item) {
+            switch (item.effect) {
+                case 'resistance': return `+${(item.value * 100)}% resistência a dano`;
+                case 'speed': return `+${(item.value * 100)}% velocidade`;
+                default: return item.effect;
+            }
+        }
+
+        async function useInventoryItem(itemId) {
+            if (!playerState) return;
+
+            const item = inventory.find(i => i.id === itemId);
+            if (!item) return;
+
+            switch (item.effect) {
+                case 'resistance':
+                    if (inventory.some(i => i.equipped && i.effect === 'resistance')) {
+                        addChatMessage('Você já tem um amuleto equipado!', 'system');
+                        return;
+                    }
+                    await updateInventoryItem(itemId, { equipped: true });
+                    addChatMessage(`${item.item_name} equipado! +${(item.value * 100)}% resistência`, 'system');
+                    break;
+                case 'speed':
+                    if (inventory.some(i => i.equipped && i.effect === 'speed')) {
+                        addChatMessage('Você já tem uma capa equipada!', 'system');
+                        return;
+                    }
+                    await updateInventoryItem(itemId, { equipped: true });
+                    addChatMessage(`${item.item_name} equipado! +${(item.value * 100)}% velocidade`, 'system');
+                    break;
+            }
+        }
+
+        function calculateDamage(baseDamage, isPlayer = true) {
+            let damage = baseDamage;
+            if (isPlayer && inventory.some(item => item.equipped && item.effect === 'speed')) {
+                damage *= 1.15;
+            }
+            return Math.floor(damage);
+        }
+
+        function calculateDamageReduction(damage) {
+            let finalDamage = damage;
+            const resistanceItem = inventory.find(item => item.equipped && item.effect === 'resistance');
+            if (resistanceItem) {
+                finalDamage *= (1 - resistanceItem.value);
+            }
+            return Math.floor(finalDamage);
+        }
+    </script>
+</body>
+</html>
